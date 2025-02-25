@@ -1,14 +1,18 @@
 #!/data/data/com.termux/files/usr/bin/python3
 
 import yt_dlp
+import requests
+import os
 from youtube_transcript_api import YouTubeTranscriptApi
 import subprocess
 import json
 from typing import List
+from dotenv import load_dotenv, dotenv_values
+
+load_dotenv()
 
 with open('channels.txt', 'r') as f:
     channels = f.read().split()
-    print(channels)
 
 def get_links(channel_url: str):
     command = [
@@ -51,6 +55,17 @@ def write_id_to_json(id: list) -> None:
         
         json.dump(id, f, ensure_ascii=False, indent=4)
 
+def send_to_tg(message):
+    bot_token = os.getenv("BOT_TOKEN")
+    chat_id = os.getenv("CHAT_ID")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {
+    'chat_id': chat_id,
+    'text': message
+}
+    response = requests.get(url, params=params)
+    return response.json()
+
 for channel in channels:
     for video in get_links(channel):
         vid_id = get_id(video)
@@ -61,5 +76,11 @@ for channel in channels:
         else:
             id_list.append(vid_id)
             write_id_to_json(id_list)
-            print(get_yt_subtitles(vid_id))
+            sub = get_yt_subtitles(vid_id)
+            # sometimes message is too long, > 4096characters
+            messages = [ sub[i:i+4095] for i in range(0, len(sub), 4095) ]
+            for message in messages:
+                print(send_to_tg(message=message))
+                print(type(message))
+
 
