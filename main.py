@@ -6,7 +6,8 @@ import os
 from youtube_transcript_api import YouTubeTranscriptApi
 import subprocess
 import json
-from typing import List
+from typing import List, Optional
+from sys import exit
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
@@ -14,7 +15,7 @@ load_dotenv()
 with open('channels.txt', 'r') as f:
     channels = f.read().split()
 
-def get_links(channel_url: str):
+def get_links(channel_url: str) -> Optional[List[str]]:
     command = [
         "yt-dlp",
         '--simulate',
@@ -29,9 +30,13 @@ def get_links(channel_url: str):
 
     # Run yt-dlp and capture output
     result = subprocess.run(command, capture_output=True, text=True)
-    result = result.stdout.strip().split('\n') #turning to list, stripped because there is a newline at last line
-    print(result)
-    return result
+    if result.stdout:
+        result = result.stdout.strip().split('\n') #turning to list, stripped because there is a newline at last line
+        return result
+    else:
+        #sometimes output will have no string we cant turn that into a list
+        #it was a major bug, took my 3 hours
+        return None
 
 def get_title(channel_id: str):
     command = [
@@ -80,23 +85,27 @@ def send_to_tg(message):
     return response.json()
 
 for channel in channels:
-    for video in get_links(channel):
-        vid_id = get_id(video)
-        id_list = get_id_from_json('video_id.json')
-        if vid_id in id_list:
-            print(f'already exists: {vid_id}')
-            pass
-        else:
-            id_list.append(vid_id)
-            write_id_to_json(id_list)
-            sub = get_yt_subtitles(vid_id)
-            title = get_title(vid_id)
+    vid_links = get_links(channel)
+    if vid_links is not None:
+        for video in vid_links:
+            vid_id = get_id(video)
+            id_list = get_id_from_json('video_id.json')
+            if vid_id in id_list:
+                print(f'already exists: {vid_id}')
+                pass
+            else:
+                id_list.append(vid_id)
+                write_id_to_json(id_list)
+                sub = get_yt_subtitles(vid_id)
+                title = get_title(vid_id)
 
-            message = f'<b>{title}</b>\n\n' + sub
-            # sometimes message is too long, > 4096characters
-            messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
-            for message in messages:
-                print(send_to_tg(message=message))
-                print(type(message))
+                message = f'<b>{title}</b>\n\n' + sub
+                # sometimes message is too long, > 4096characters
+                messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
+                for message in messages:
+                    print(send_to_tg(message=message))
 
 
+    else:
+        print(f'no video for subtitle')
+        exit
