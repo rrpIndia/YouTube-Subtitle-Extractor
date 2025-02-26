@@ -17,10 +17,11 @@ with open('channels.txt', 'r') as f:
 def get_links(channel_url: str):
     command = [
         "yt-dlp",
-        "--no-quiet",
+        '--simulate',
+        '--lazy-playlist',
         "--dateafter", "now-1day",
         "--break-on-reject",
-        "--download-archive", "data/data/com.termux/files/home/storage/shared/data/log/yt1.txt",
+        '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
         "--print", "webpage_url",
 
         channel_url
@@ -91,7 +92,7 @@ for channel in channels:
             sub = get_yt_subtitles(vid_id)
             title = get_title(vid_id)
 
-            message = f'<b>{title}</b>' + sub
+            message = f'<b>{title}</b>\n\n' + sub
             # sometimes message is too long, > 4096characters
             messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
             for message in messages:
