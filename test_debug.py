@@ -9,11 +9,12 @@ import json
 from typing import List, Optional
 from sys import exit
 from glob import glob
+from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
-debug = True# Enable debug prints
+debug = False # Enable debug prints
 
 def deb(message):
     if debug:
@@ -126,24 +127,28 @@ def make_json_files_of_urls():
         get_links_to_file(channel)
 
 #make_json_files_of_urls()
+def main():
+    for dic in get_files():
+        json_file = FileManagment(dic)
+        json_dict = json_file.read_json()
 
-for dic in get_files():
-    json_file = FileManagment(dic)
-    json_dict = json_file.read_json()
+        title = json_dict['title']
+        upload_date = datetime.strptime(json_dict['upload_date'], "%Y%m%d").date()
+        channel_name = json_dict['channel']
+        link = json_dict['webpage_url']
+        subtitle = get_subtitle(link)
 
-    title = json_dict['title']
-    channel_name = json_dict['channel']
-    link = json_dict['webpage_url']
-    subtitle = get_subtitle(link)
+        message = f'''
+        <b>{title}\n\n\n</b>
+        {link}
+        {upload_date}
+        <u>Channel: {channel_name}\n\n\n </u>
+        {subtitle}'''
 
-    message = f'''
-    <b>{title}\n\n\n</b>
-    {link}
-    <u>Channel: {channel_name}\n\n\n </u>
-    {subtitle}'''
+        messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
+        for message in messages:
+            send_to_tg(message)
+        os.remove(dic)
+        deb(f'removed file: {dic}')
 
-    messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
-    for message in messages:
-        send_to_tg(message)
-    os.remove(dic)
-    deb(f'removed file: {dic}')
+main()
