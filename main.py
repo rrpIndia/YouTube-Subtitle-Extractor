@@ -8,104 +8,147 @@ import subprocess
 import json
 from typing import List, Optional
 from sys import exit
+from glob import glob
+from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
-with open('channels.txt', 'r') as f:
-    channels = f.read().split()
+debug = False # Enable debug prints
 
-def get_links(channel_url: str) -> Optional[List[str]]:
+def deb(message):
+    if debug:
+        print(f"[DEBUG] {message}")
+
+class FileManagment:
+    def __init__(self, file):
+        self.file = file
+        deb(f"FileManager initialized with file: {self.file}")
+
+    def channel_list(self):
+        try:
+            with open(self.file, 'r') as f:
+                content = f.read()
+                deb(f"File content read: {content}")
+                if not content.strip():
+                    print(f'file is empty: {self.file}')
+                    return []
+                channels = [line.strip() for line in content.splitlines()]
+                deb(f"Channels extracted: {channels}")
+                return channels
+        except FileNotFoundError:
+            print(f'file not found {self.file}')
+            return []
+
+    def read_json(self):
+        try:
+            with open(self.file, 'r') as f:
+                deb(f"opening file: {self.file}")
+                data_dict = json.load(f)
+                deb(f'loaded data from file: {data_dict}')
+                return data_dict
+        except FileNotFoundError:
+            print(f'file is not available')
+            deb(f'file is not available')
+            return None
+
+def get_links_to_file(channel_url: str) -> Optional[List[str]]:
+    deb(f"Getting links for channel: {channel_url}")
     command = [
         "yt-dlp",
         '--simulate',
+        '--no-quiet',
         '--lazy-playlist',
-        "--dateafter", "now-1day",
+        "--dateafter", "now-3day",
         "--break-on-reject",
         '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-        "--print", "webpage_url",
-
+        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', 'url_extract_%(autonumber)d.json',
         channel_url
     ]
 
-    # Run yt-dlp and capture output
+    deb(f"yt-dlp command: {command}")
     result = subprocess.run(command, capture_output=True, text=True)
+    deb(f"yt-dlp result: {result}")
     if result.stdout:
-        result = result.stdout.strip().split('\n') #turning to list, stripped because there is a newline at last line
+        result = result.stdout.strip().split('\n')
+        deb(f"yt-dlp stdout split: {result}")
         return result
     else:
-        #sometimes output will have no string we cant turn that into a list
-        #it was a major bug, took my 3 hours
+        deb("yt-dlp stdout is empty.")
         return None
 
-def get_title(channel_id: str):
-    command = [
-            'yt-dlp',
-            '--get-title',
-            channel_id
-            ]
-    result = subprocess.run(command, capture_output=True, text=True)
-    result = result.stdout.strip()
-    return result
-
-def get_yt_subtitles(video_id):
-    try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=('hi','en'), preserve_formatting=True)
-        
-        transcript_text = " ".join([entry['text'] for entry in transcript])
-        return transcript_text
-    
-    except Exception as e:
-        print("Error:", e)
+def get_files(match='url_extract_*.json'):
+    '''will return empty list if no files are available or matching'''
+    files = glob(match)
+    return files
 
 def get_id(vid_url):
+    deb(f'video_url is: {vid_url}')
+    deb(f'getting ready to extract video id')
     video_id = vid_url.split('v=')[1].split('&')[0]
+    deb(f'video id is: {video_id}')
     return video_id 
 
-def get_id_from_json(file: str) -> List[str]:
-    with open(file, 'r') as f:
-        ids = json.load(f)
-        return ids
+def get_subtitle(video_url):
+    deb(f"Getting subtitles for video URL: {video_url}")
+    video_id = get_id(video_url)
+    deb(f'got video id: {video_id}')
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=('hi', 'en'), preserve_formatting=True)
+        transcript_text = " ".join([entry['text'] for entry in transcript])
+        deb(f"Subtitles extracted: {transcript_text[:100]}...") # Print first 100 chars for brevity
+        return transcript_text
+    except Exception as e:
+        print("Error:", e)
+        deb(f"Error getting subtitles: {e}")
 
-def write_id_to_json(id: list) -> None:
-    with open('video_id.json', 'w', encoding='utf-8') as f:
-        
-        json.dump(id, f, ensure_ascii=False, indent=4)
 
 def send_to_tg(message):
+    deb(f"Sending message to Telegram: {message}")
     bot_token = os.getenv("BOT_TOKEN")
     chat_id = os.getenv("CHAT_ID")
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
-    'chat_id': chat_id,
-    'text': message,
-    'parse_mode': 'HTML'
-}
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    deb(f"Telegram API request: {params}")
     response = requests.get(url, params=params)
+    deb(f"Telegram API response: {response.json()}")
     return response.json()
 
-for channel in channels:
-    vid_links = get_links(channel)
-    if vid_links is not None:
-        for video in vid_links:
-            vid_id = get_id(video)
-            id_list = get_id_from_json('video_id.json')
-            if vid_id in id_list:
-                print(f'already exists: {vid_id}')
-                pass
-            else:
-                id_list.append(vid_id)
-                write_id_to_json(id_list)
-                sub = get_yt_subtitles(vid_id)
-                title = get_title(vid_id)
+# for a single session
+def make_json_files_of_urls():
+    deb(f'making json files from urls to extract later')
+    to_download = FileManagment('channels.txt')
+    for channel in to_download.channel_list():
+        deb(f"Processing channel: {channel}")
+        get_links_to_file(channel)
 
-                message = f'<b>{title}</b>\n\n' + sub
-                # sometimes message is too long, > 4096characters
-                messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
-                for message in messages:
-                    print(send_to_tg(message=message))
+#make_json_files_of_urls()
+def main():
+    for dic in get_files():
+        json_file = FileManagment(dic)
+        json_dict = json_file.read_json()
 
+        title = json_dict['title']
+        upload_date = datetime.strptime(json_dict['upload_date'], "%Y%m%d").date()
+        channel_name = json_dict['channel']
+        link = json_dict['webpage_url']
+        subtitle = get_subtitle(link)
 
-    else:
-        print(f'no video for subtitle')
-        exit
+        message = f'''
+        <b>{title}\n\n\n</b>
+        {link}
+        {upload_date}
+        <u>Channel: {channel_name}\n\n\n </u>
+        {subtitle}'''
+
+        messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
+        for message in messages:
+            send_to_tg(message)
+        os.remove(dic)
+        deb(f'removed file: {dic}')
+
+main()
