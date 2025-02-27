@@ -35,11 +35,12 @@ def get_links_to_file(channel_url: str) -> Optional[List[str]]:
     command = [
         "yt-dlp",
         '--simulate',
+        '--no-quiet',
         '--lazy-playlist',
         "--dateafter", "now-1day",
         "--break-on-reject",
         '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-        "--print-to-file", "webpage_url", 'urls_to_extract.txt',
+        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', 'urls_to_extract.json',
 
         channel_url
     ]
@@ -103,5 +104,6 @@ def send_to_tg(message):
 
 # for a single session
 
-to_download = FileManagment('urls_to_extract.txt')
-print(to_download.channel_list())
+to_download = FileManagment('channels.txt')
+for i in to_download.channel_list():
+    get_links_to_file(i)
