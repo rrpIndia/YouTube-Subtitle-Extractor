@@ -126,7 +126,6 @@ def make_json_files_of_urls():
         deb(f"Processing channel: {channel}")
         get_links_to_file(channel)
 
-#make_json_files_of_urls()
 def main():
     for dic in get_files():
         json_file = FileManagment(dic)
@@ -151,4 +150,7 @@ def main():
         os.remove(dic)
         deb(f'removed file: {dic}')
 
-main()
+
+if __name__ == '__main__':
+    make_json_files_of_urls()
+    main()
