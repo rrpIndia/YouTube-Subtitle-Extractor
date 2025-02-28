@@ -82,12 +82,13 @@ def get_files(match='url_extract_*.json'):
     files = glob(match)
     return files
 
-def get_id(vid_url):
-    deb(f'video_url is: {vid_url}')
-    deb(f'getting ready to extract video id')
-    video_id = vid_url.split('v=')[1].split('&')[0]
-    deb(f'video id is: {video_id}')
-    return video_id 
+def get_id(video_url:str)-> Optional(str):
+    deb(f'getting id of {video_url}')
+    data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", video_url)
+    if data:
+        deb('printig data {data}')
+        return data[0]
+    return None
 
 def get_subtitle(video_url):
     deb(f"Getting subtitles for video URL: {video_url}")
