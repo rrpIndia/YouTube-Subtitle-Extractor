@@ -1,0 +1,137 @@
+Overview:
+
+This script automates the process of extracting YouTube video data (such as video title, upload date, channel name, and subtitles) from a specific YouTube channel, formatting this data, and sending it to a Telegram chat via a bot. The script uses various Python libraries and tools such as yt-dlp, requests, youtube_transcript_api, and more.
+1. FileManagment Class
+
+The FileManagment class is responsible for managing files related to YouTube channel URLs and the JSON files containing video data. This class provides methods to read a list of channels and fetch URLs from them.
+Methods:
+
+    __init__(self, file)
+    Args:
+        file: The path to the file to be processed.
+
+    Description:
+        Initializes the FileManagment object with the provided file.
+
+    channel_list(self)
+    Returns:
+        A list of YouTube channel URLs extracted from the file.
+        Description:
+        Reads the file, checks for emptiness, and returns the list of YouTube channel URLs. If the file is not found or empty, it returns an empty list.
+
+    read_json(self)
+    Returns:
+        A dictionary parsed from the JSON file, or None if the file is not found.
+        Description:
+        Reads and loads the content of the specified file as a JSON object.
+
+    make_json_files_of_urls()
+    Description:
+        Iterates over each channel URL in the file, calling get_links_to_file() for each.
+
+    get_links_to_file(self, channel_url: str) -> Optional[List[str]]
+    Args:
+        channel_url: The URL of a YouTube channel to extract video data from.
+
+    Returns:
+        A list of video metadata (title, upload date, URL) in JSON format, or None if no data is fetched.
+        Description:
+        Uses yt-dlp to extract metadata for videos from the provided channel, filtering by videos uploaded in the past 3 days. The metadata is saved to a .json file.
+
+    get_files(match='url_extract_*.json')
+    Args:
+        match: The glob pattern to match filenames. By default, it looks for url_extract_*.json.
+
+    Returns:
+        A list of filenames matching the pattern.
+        Description:
+        Retrieves a list of JSON files matching the given glob pattern from the directory.
+
+2. Sender Class
+
+The Sender class is responsible for sending formatted messages to a specified Telegram chat using a bot.
+Methods:
+
+    __init__(self, message)
+    Args:
+        message: The message to be sent via Telegram.
+
+    Description:
+        Initializes the Sender object with the message to be sent.
+
+    send_to_tg(self)
+    Returns:
+        The response from the Telegram API in JSON format.
+        Description:
+        Sends the message stored in the object to the Telegram chat specified in the environment variables (BOT_TOKEN and CHAT_ID).
+
+3. Video Class
+
+The Video class is responsible for fetching subtitles and metadata for a single YouTube video.
+Methods:
+
+    __init__(self, vid_url)
+    Args:
+        vid_url: The URL of the YouTube video.
+
+    Description:
+        Initializes the Video object with the video URL and extracts the video ID.
+
+    get_id(self) -> Optional[str]
+    Returns:
+        The video ID as a string, or None if no valid video ID is found.
+        Description:
+        Extracts the video ID from the provided URL using a regular expression.
+
+    get_subtitle(self)
+    Returns:
+        A string containing the combined subtitles of the video, or None if an error occurs while fetching subtitles.
+        Description:
+        Uses YouTubeTranscriptApi to fetch subtitles for the video in both English and Hindi (if available). The subtitles are concatenated and returned as a single string.
+
+4. Main Function
+
+The main() function is the entry point of the script. It orchestrates the flow of operations by processing each JSON file that contains video metadata, extracting video details (like subtitles), and sending the information to Telegram.
+Steps:
+
+    The function reads each JSON file containing video metadata.
+    For each video, it extracts the title, upload date, channel name, video URL, and subtitles.
+    It formats the extracted data into a message suitable for Telegram and splits it if the message exceeds 4095 characters (Telegram's limit).
+    The function sends the formatted message(s) to Telegram via the Sender class.
+    It removes the processed JSON file after sending the message.
+
+5. Environment Variables
+
+The script relies on the following environment variables to send messages to Telegram:
+
+    BOT_TOKEN: The bot token for authentication with the Telegram API.
+    CHAT_ID: The ID of the Telegram chat to send the message to.
+
+These environment variables are loaded from a .env file using the dotenv library.
+6. Example Usage
+
+To use this script, ensure the following:
+
+    Install the required libraries:
+
+pip install yt-dlp requests youtube-transcript-api python-dotenv
+
+Create a .env file in the same directory as the script with the following content:
+
+BOT_TOKEN=your_bot_token
+CHAT_ID=your_chat_id
+
+Run the script using Python:
+
+    python3 your_script.py
+
+7. Error Handling
+
+    FileNotFoundError: If a file or channel list is not found, the script prints an error message and proceeds.
+    YouTube Transcript API Errors: If subtitles are unavailable for a video, the script prints an error message and proceeds.
+
+8. Additional Notes
+
+    The script assumes the channel list is stored in a text file, with one URL per line.
+    The .json files generated by yt-dlp are used as the source of video metadata, which is processed and sent to Telegram.
+    The script uses yt-dlp to download metadata but doesn't actually download the video, only fetching metadata.
