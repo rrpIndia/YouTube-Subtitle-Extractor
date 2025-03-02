@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/python3
-
+import re
 import yt_dlp
 import requests
 import os
@@ -52,6 +52,14 @@ class FileManagment:
             deb(f'file is not available')
             return None
 
+    def make_json_files_of_urls():
+        deb(f'making json files from urls to extract later')
+        to_download = FileManagment('channels.txt')
+        for channel in to_download.channel_list():
+            deb(f"Processing channel: {channel}")
+            get_links_to_file(channel)
+
+
 def get_links_to_file(channel_url: str) -> Optional[List[str]]:
     deb(f"Getting links for channel: {channel_url}")
     command = [
@@ -82,50 +90,54 @@ def get_files(match='url_extract_*.json'):
     files = glob(match)
     return files
 
-def get_id(video_url:str)-> Optional(str):
-    deb(f'getting id of {video_url}')
-    data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", video_url)
-    if data:
-        deb('printig data {data}')
-        return data[0]
-    return None
+class Sender:
+    def __init__(self, message):
+        self.message = message
+        
+    def send_to_tg(self):
+        deb(f"Sending message to Telegram: {self.message}")
+        bot_token = os.getenv("BOT_TOKEN")
+        chat_id = os.getenv("CHAT_ID")
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        params = {
+            'chat_id': chat_id,
+            'text': self.message,
+            'parse_mode': 'HTML'
+        }
+        deb(f"Telegram API request: {params}")
+        response = requests.get(url, params=params)
+        deb(f"Telegram API response: {response.json()}")
+        return response.json()   
 
-def get_subtitle(video_url):
-    deb(f"Getting subtitles for video URL: {video_url}")
-    video_id = get_id(video_url)
-    deb(f'got video id: {video_id}')
-    try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=('hi', 'en'), preserve_formatting=True)
-        transcript_text = " ".join([entry['text'] for entry in transcript])
-        deb(f"Subtitles extracted: {transcript_text[:100]}...") # Print first 100 chars for brevity
-        return transcript_text
-    except Exception as e:
-        print("Error:", e)
-        deb(f"Error getting subtitles: {e}")
+class Video:
+    def __init__(self, vid_url):
+        self.vid_url = vid_url
+        self.vid_id = self.get_id()
+    
+    def get_id(self)-> Optional[str]:
+        deb(f'getting id of {self.vid_url}')
+        data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", vid_url)
+        if data:
+            deb('printig data {data}')
+            return data[0]
+        return None
+
+    def get_subtitle(self):
+        deb(f"Getting subtitles for video URL: {self.vid_url}")
+        vid_id = get_id(self.vid_url)
+        deb(f'got video id: {vid_id}')
+        try:
+            transcript = YouTubeTranscriptApi.get_transcript(vid_id, languages=('hi', 'en'), preserve_formatting=True)
+            transcript_text = " ".join([entry['text'] for entry in transcript])
+            deb(f"Subtitles extracted: {transcript_text[:100]}...") # Print first 100 chars for brevity
+            return transcript_text
+        except Exception as e:
+            print("Error:", e)
+            deb(f"Error getting subtitles: {e}")
 
 
-def send_to_tg(message):
-    deb(f"Sending message to Telegram: {message}")
-    bot_token = os.getenv("BOT_TOKEN")
-    chat_id = os.getenv("CHAT_ID")
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    params = {
-        'chat_id': chat_id,
-        'text': message,
-        'parse_mode': 'HTML'
-    }
-    deb(f"Telegram API request: {params}")
-    response = requests.get(url, params=params)
-    deb(f"Telegram API response: {response.json()}")
-    return response.json()
 
 # for a single session
-def make_json_files_of_urls():
-    deb(f'making json files from urls to extract later')
-    to_download = FileManagment('channels.txt')
-    for channel in to_download.channel_list():
-        deb(f"Processing channel: {channel}")
-        get_links_to_file(channel)
 
 def main():
     for dic in get_files():
@@ -153,5 +165,4 @@ def main():
 
 
 if __name__ == '__main__':
-    make_json_files_of_urls()
-    main()
+    pass
