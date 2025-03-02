@@ -14,27 +14,18 @@ from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
-debug = False # Enable debug prints
-
-def deb(message):
-    if debug:
-        print(f"[DEBUG] {message}")
-
 class FileManagment:
     def __init__(self, file):
         self.file = file
-        deb(f"FileManager initialized with file: {self.file}")
 
     def channel_list(self):
         try:
             with open(self.file, 'r') as f:
                 content = f.read()
-                deb(f"File content read: {content}")
                 if not content.strip():
                     print(f'file is empty: {self.file}')
                     return []
                 channels = [line.strip() for line in content.splitlines()]
-                deb(f"Channels extracted: {channels}")
                 return channels
         except FileNotFoundError:
             print(f'file not found {self.file}')
@@ -43,25 +34,19 @@ class FileManagment:
     def read_json(self):
         try:
             with open(self.file, 'r') as f:
-                deb(f"opening file: {self.file}")
                 data_dict = json.load(f)
-                deb(f'loaded data from file: {data_dict}')
                 return data_dict
         except FileNotFoundError:
             print(f'file is not available')
-            deb(f'file is not available')
             return None
 
     def make_json_files_of_urls():
-        deb(f'making json files from urls to extract later')
         to_download = FileManagment('channels.txt')
         for channel in to_download.channel_list():
-            deb(f"Processing channel: {channel}")
             get_links_to_file(channel)
 
 
 def get_links_to_file(channel_url: str) -> Optional[List[str]]:
-    deb(f"Getting links for channel: {channel_url}")
     command = [
         "yt-dlp",
         '--simulate',
@@ -74,15 +59,11 @@ def get_links_to_file(channel_url: str) -> Optional[List[str]]:
         channel_url
     ]
 
-    deb(f"yt-dlp command: {command}")
     result = subprocess.run(command, capture_output=True, text=True)
-    deb(f"yt-dlp result: {result}")
     if result.stdout:
         result = result.stdout.strip().split('\n')
-        deb(f"yt-dlp stdout split: {result}")
         return result
     else:
-        deb("yt-dlp stdout is empty.")
         return None
 
 def get_files(match='url_extract_*.json'):
@@ -95,7 +76,6 @@ class Sender:
         self.message = message
         
     def send_to_tg(self):
-        deb(f"Sending message to Telegram: {self.message}")
         bot_token = os.getenv("BOT_TOKEN")
         chat_id = os.getenv("CHAT_ID")
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -104,9 +84,7 @@ class Sender:
             'text': self.message,
             'parse_mode': 'HTML'
         }
-        deb(f"Telegram API request: {params}")
         response = requests.get(url, params=params)
-        deb(f"Telegram API response: {response.json()}")
         return response.json()   
 
 class Video:
@@ -115,25 +93,19 @@ class Video:
         self.vid_id = self.get_id()
     
     def get_id(self)-> Optional[str]:
-        deb(f'getting id of {self.vid_url}')
         data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", vid_url)
         if data:
-            deb('printig data {data}')
             return data[0]
         return None
 
     def get_subtitle(self):
-        deb(f"Getting subtitles for video URL: {self.vid_url}")
         vid_id = get_id(self.vid_url)
-        deb(f'got video id: {vid_id}')
         try:
             transcript = YouTubeTranscriptApi.get_transcript(vid_id, languages=('hi', 'en'), preserve_formatting=True)
             transcript_text = " ".join([entry['text'] for entry in transcript])
-            deb(f"Subtitles extracted: {transcript_text[:100]}...") # Print first 100 chars for brevity
             return transcript_text
         except Exception as e:
             print("Error:", e)
-            deb(f"Error getting subtitles: {e}")
 
 
 
@@ -161,7 +133,6 @@ def main():
         for message in messages:
             send_to_tg(message)
         os.remove(dic)
-        deb(f'removed file: {dic}')
 
 
 if __name__ == '__main__':
