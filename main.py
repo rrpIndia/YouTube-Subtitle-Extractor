@@ -41,35 +41,36 @@ class FileManagment:
             return None
 
     def make_json_files_of_urls():
-        to_download = FileManagment('channels.txt')
-        for channel in to_download.channel_list():
+        for channel in self.channel_list():
             get_links_to_file(channel)
 
 
-def get_links_to_file(channel_url: str) -> Optional[List[str]]:
-    command = [
-        "yt-dlp",
-        '--simulate',
-        '--no-quiet',
-        '--lazy-playlist',
-        "--dateafter", "now-3day",
-        "--break-on-reject",
-        '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', 'url_extract_%(autonumber)d.json',
-        channel_url
-    ]
+    def get_links_to_file(self, channel_url: str) -> Optional[List[str]]:
+        self.channel_url = channel_url
+        command = [
+            "yt-dlp",
+            '--simulate',
+            '--no-quiet',
+            '--lazy-playlist',
+            "--dateafter", "now-3day",
+            "--break-on-reject",
+            '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
+            "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', 'url_extract_%(autonumber)d.json',
+            self.channel_url
+        ]
 
-    result = subprocess.run(command, capture_output=True, text=True)
-    if result.stdout:
-        result = result.stdout.strip().split('\n')
-        return result
-    else:
-        return None
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.stdout:
+            result = result.stdout.strip().split('\n')
+            return result
+        else:
+            return None
 
-def get_files(match='url_extract_*.json'):
-    '''will return empty list if no files are available or matching'''
-    files = glob(match)
-    return files
+    def get_files(match='url_extract_*.json'):
+        self.match = match
+        '''will return empty list if no files are available or matching'''
+        files = self.glob(match)
+        return files
 
 class Sender:
     def __init__(self, message):
