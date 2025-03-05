@@ -23,17 +23,18 @@ class FileManagment:
             with open(self.file, 'r') as f:
                 content = f.read()
                 if not content.strip():
-                    print(f'file is empty: {self.file}')
-                    return []
+                    exit(f'file is empty: {self.file}')
+
                 channels = [line.strip() for line in content.splitlines()]
                 return channels
         except FileNotFoundError:
             print(f'file not found {self.file}')
             return []
 
-    def read_json(self):
+    def read_json(self, json_file):
+        self.json_file = json_file
         try:
-            with open(self.file, 'r') as f:
+            with open(self.json_file, 'r') as f:
                 data_dict = json.load(f)
                 return data_dict
         except FileNotFoundError:
@@ -66,10 +67,10 @@ class FileManagment:
         else:
             return None
 
-    def get_files(match='url_extract_*.json'):
+    def get_files(self, match='url_extract_*.json'):
         self.match = match
         '''will return empty list if no files are available or matching'''
-        files = self.glob(match)
+        files = glob(self.match)
         return files
 
 class Sender:
@@ -92,15 +93,37 @@ class Video:
     def __init__(self, vid_url):
         self.vid_url = vid_url
         self.vid_id = self.get_id()
+    import re
+import requests
+
+def is_valid_youtube_channel(url):
+    # Regular expression to match YouTube channel URLs
+    pattern = r'(https?://)?(www\.)?(youtube|youtu\.be)/(channel/[\w-]+|c/[\w-]+)'
     
+    # Check if the URL matches the pattern
+    if re.match(pattern, url):
+        try:
+            # Send a GET request to the URL
+            response = requests.get(url)
+            
+            # If the response status code is 200, it's a valid URL
+            if response.status_code == 200:
+                return True
+            else:
+                return False
+        except requests.exceptions.RequestException:
+            return False
+    else:
+        return False
+
     def get_id(self)-> Optional[str]:
-        data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", vid_url)
+        data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", self.vid_url)
         if data:
             return data[0]
         return None
 
     def get_subtitle(self):
-        vid_id = get_id(self.vid_url)
+        vid_id = self.get_id()
         try:
             transcript = YouTubeTranscriptApi.get_transcript(vid_id, languages=('hi', 'en'), preserve_formatting=True)
             transcript_text = " ".join([entry['text'] for entry in transcript])
@@ -113,16 +136,19 @@ class Video:
 # for a single session
 
 def main():
-    for dic in get_files():
-        json_file = FileManagment(dic)
-        json_dict = json_file.read_json()
+    files = FileManagment('channels.txt')
+    for dic in files.get_files():
+        print(dic)
+        print(type(dic))
+        json_dict = files.read_json(dic)
 
         title = json_dict['title']
         upload_date = datetime.strptime(json_dict['upload_date'], "%Y%m%d").date()
         channel_name = json_dict['channel']
         link = json_dict['webpage_url']
-        subtitle = get_subtitle(link)
 
+        yt = Video(link)
+        subtitle = yt.get_subtitle()
         message = f'''
         <b>{title}\n\n\n</b>
         {link}
@@ -132,9 +158,9 @@ def main():
 
         messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
         for message in messages:
-            send_to_tg(message)
+            print(message)
         os.remove(dic)
 
 
 if __name__ == '__main__':
-    pass
+    main()
