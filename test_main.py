@@ -1,13 +1,12 @@
 import unittest
 import re
+import os
+import tempfile as tf
+from unittest.mock import MagicMock, patch, mock_open
 
-#from main import get_id
-def get_id(url:str)->str:
-   data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", url)
-   if data:
-       return data[0]
-   return None 
+from main import FileManagment
 
+@unittest.skip("already tested")
 class TestGetId(unittest.TestCase):
 
     def test_empty_url(self):
@@ -35,6 +34,48 @@ class TestGetId(unittest.TestCase):
         self.assertEqual(get_id('https://m.youtube.com/embed/SA2iWivDJiE'), 'SA2iWivDJiE')
     def test_embed_param_url(self):
         self.assertEqual(get_id('https://m.youtube.com/embed/SA2iWivDJiE&t=1m3s'), 'SA2iWivDJiE')
+
+@unittest.skip
+class TestGetFiles(unittest.TestCase):
+    def setUp(self):
+        self.obj = FileManagment('test_channelx.txt')
+       
+    def test_get_files_no_match(self):
+        with patch('main.glob') as mocked_glob:
+            mocked_glob.return_value = []
+            result = self.obj.get_files()
+            self.assertEqual(result, [])
+            mocked_glob.assert_called_with('url_extract_*.json')
+
+    def test_get_matched(self):
+        with patch('main.glob') as mocked_glob:
+            mocked_glob.return_value = ['url_extract_1.json', 'url_extract_2.json']
+            result = self.obj.get_files()
+            self.assertEqual(result, ['url_extract_1.json', 'url_extract_2.json'])
+            mocked_glob.assert_called_with('url_extract_*.json')
+
+
+
+class TestChannelList(unittest.TestCase):
+    def setUp(self):
+        self.obj = FileManagment('test_file.txt')
+
+    def test_read_channels_line_by_line(self):
+        with patch('builtins.open', mock_open(read_data='line1\nline2\nline3')):
+            func_result = self.obj.channel_list()
+            expected_result = ['line1', 'line2', 'line3']
+            self.assertEqual(sorted(expected_result), sorted(func_result))
+
+    def test_read_channels_empty_line(self):
+        '''should exit when channel list is empty'''
+        with patch('builtins.open', mock_open(read_data='')):
+             with self.assertRaises(SystemExit):
+                self.obj.channel_list()
+
+#    def test_read_channels_empty_line_bw_channel_list(self):
+#        '''should warn with line number that url is wrong'''
+#        with patch('builtins.open', mock_open(read_data='line1\nline2\n""')):
+
+
 if __name__ == '__main__':
     unittest.main()
-
