@@ -93,28 +93,27 @@ class Video:
     def __init__(self, vid_url):
         self.vid_url = vid_url
         self.vid_id = self.get_id()
-    import re
-import requests
+        self.subtitle = self.get_subtitle()
 
-def is_valid_youtube_channel(url):
-    # Regular expression to match YouTube channel URLs
-    pattern = r'(https?://)?(www\.)?(youtube|youtu\.be)/(channel/[\w-]+|c/[\w-]+)'
-    
-    # Check if the URL matches the pattern
-    if re.match(pattern, url):
-        try:
-            # Send a GET request to the URL
-            response = requests.get(url)
-            
-            # If the response status code is 200, it's a valid URL
-            if response.status_code == 200:
-                return True
-            else:
+    def is_valid_youtube_channel(url):
+        # Regular expression to match YouTube channel URLs
+        pattern = r'(https?://)?(www\.)?(youtube|youtu\.be)/(channel/[\w-]+|c/[\w-]+)'
+        
+        # Check if the URL matches the pattern
+        if re.match(pattern, url):
+            try:
+                # Send a GET request to the URL
+                response = requests.get(url)
+                
+                # If the response status code is 200, it's a valid URL
+                if response.status_code == 200:
+                    return True
+                else:
+                    return False
+            except requests.exceptions.RequestException:
                 return False
-        except requests.exceptions.RequestException:
+        else:
             return False
-    else:
-        return False
 
     def get_id(self)-> Optional[str]:
         data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", self.vid_url)
