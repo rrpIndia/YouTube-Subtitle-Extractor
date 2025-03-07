@@ -72,9 +72,12 @@ class TestChannelList(unittest.TestCase):
              with self.assertRaises(SystemExit):
                 self.obj.channel_list()
 
-#    def test_read_channels_empty_line_bw_channel_list(self):
-#        '''should warn with line number that url is wrong'''
-#        with patch('builtins.open', mock_open(read_data='line1\nline2\n""')):
+    @unittest.skip # to implement this checking later
+    def test_read_channels_empty_line_bw_channel_list(self):
+        '''should warn with line number that url is wrong'''
+        with patch('builtins.open', mock_open(read_data='line1\nline2\n""')):
+            with self.assertRaises(EmptyLine):
+                self.obj.channel_list()
 
 
 if __name__ == '__main__':
