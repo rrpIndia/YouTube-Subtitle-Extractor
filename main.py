@@ -1,6 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/python3
 import re
-import yt_dlp
 import requests
 import os
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -13,10 +12,13 @@ from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
+CHANNEL_FILE = '/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/channels.txt'
 
 class FileManagment:
     def __init__(self, file):
+        '''takes file of channel list as input'''
         self.file = file
+        self.channel_list = self.channel_list()
 
     def channel_list(self):
         try:
@@ -41,13 +43,19 @@ class FileManagment:
             print(f'file is not available')
             return None
 
-    def make_json_files_of_urls():
-        for channel in self.channel_list():
-            get_links_to_file(channel)
+    def make_json_files_of_urls(self):
+        for channel in self.channel_list:
+            self.get_links_to_file(channel)
 
 
     def get_links_to_file(self, channel_url: str) -> Optional[List[str]]:
+        '''takes a url of channel as input and make json files of newly released video'''
         self.channel_url = channel_url
+        print(f'starting download for {self.channel_url}')
+
+
+        #in second loop, program will put json data into already created files because %autoincrement does not know in  which iteration it is
+        # that is why channel name is must 
         command = [
             "yt-dlp",
             '--simulate',
@@ -56,13 +64,14 @@ class FileManagment:
             "--dateafter", "now-3day",
             "--break-on-reject",
             '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-            "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', 'url_extract_%(autonumber)d.json',
+            "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', f'url_extract_{self.channel_url.split('/')[-1]}_%(autonumber)d.json',
             self.channel_url
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
         if result.stdout:
             result = result.stdout.strip().split('\n')
+            print(result)
             return result
         else:
             return None
@@ -115,18 +124,19 @@ class Video:
 # for a single session
 
 def main():
-    files = FileManagment('channels.txt')
-    files.make_json_files_of_urls
+    files = FileManagment(CHANNEL_FILE)
+    print(f'initialising FileManagment Class')
+    files.make_json_files_of_urls()
+    print(f'making json files')
     for dic in files.get_files():
         json_dict = files.read_json(dic)
-        yt = Video(link)
 
         title = json_dict['title']
         upload_date = datetime.strptime(json_dict['upload_date'], "%Y%m%d").date()
         channel_name = json_dict['channel']
         link = json_dict['webpage_url']
+        yt = Video(link)
         subtitle = yt.subtitle
-
         message = f'''
         <b>{title}\n\n\n</b>
         {link}
@@ -136,9 +146,10 @@ def main():
 
         messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
         for message in messages:
+            tg = Sender(message)
+            tg.send_to_tg()
             print(message)
         os.remove(dic)
-
 
 if __name__ == '__main__':
     main()
