@@ -32,15 +32,28 @@ class ChannelFile:
         else:
             return False
     
+<<<<<<< HEAD
     def make_file(self, channel):
         self.channel = channel
         with open(self.channel_file, 'a') as f:
             f.write(f'{self.channel}\n')
+=======
+    def make_file():
+        with open(self.channel_file, 'a') as f:
+            pass
+
+>>>>>>> 7a4526e (nothimg)
 
 
 if __name__ == '__main__':
     cf = ChannelFile('test_file.txt')
     ui = cf.input()
+<<<<<<< HEAD
+=======
+    print(cf.is_valid_yt_channel(ui))
+le.txt')
+    ui = cf.input()
+>>>>>>> 7a4526e (nothimg)
     if cf.is_valid_yt_channel(ui):
         cf.make_file(ui)
         print(ui)

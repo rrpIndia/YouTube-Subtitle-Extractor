@@ -152,4 +152,65 @@ def main():
         os.remove(dic)
 
 if __name__ == '__main__':
+<<<<<<< HEAD
+=======
+    pass
+5) ]
+        for message in messages:
+            print(message)
+        os.remove(dic)
+
+
+if __name__ == '__main__':
+    main()
+    files.make_json_files_of_urls
+    for dic in files.get_files():
+        json_dict = files.read_json(dic)
+        yt = Video(link)
+
+        title = json_dict['title']
+        upload_date = datetime.strptime(json_dict['upload_date'], "%Y%m%d").date()
+        channel_name = json_dict['channel']
+        link = json_dict['webpage_url']
+        subtitle = yt.subtitle
+
+        message = f'''
+        <b>{title}\n\n\n</b>
+        {link}
+        {upload_date}
+        <u>Channel: {channel_name}\n\n\n </u>
+        {subtitle}'''
+
+        messages = [ message[i:i+4095] for i in range(0, len(message), 4095) ]
+        for message in messages:
+            print(message)
+        os.remove(dic)
+
+
+if __name__ == '__main__':
+    main()
+ain()
+").date()
+        channel_name = json_dict['channel']
+        link = json_dict['webpage_url']
+        yt = Video(link)
+        subtitle = yt.subtitle
+        message = f'''
+        <b>{title}\n\n\n</b>
+        {link}
+        {upload_date}
+        <u>Channel: {channel_name}\n\n\n </u>
+        {subtitle}'''
+
+        messages = split_story(message)
+        for message in messages:
+            tg = Sender(message)
+            tg.send_to_tg()
+            print(message)
+        os.remove(dic)
+
+if __name__ == '__main__':
+    main()
+name__ == '__main__':
+>>>>>>> 7a4526e (nothimg)
     main()
