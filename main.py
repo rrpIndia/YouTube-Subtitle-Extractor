@@ -71,7 +71,7 @@ def get_link_to_file(channel_url: str) -> Optional[List[str]]:
 
 def get_files(match='url_extract_*.json')-> list:
     '''will return empty list if no files are available or matching'''
-    files = glob(self.match)
+    files = glob(match)
     return files
 
 def send_to_tg(message):
