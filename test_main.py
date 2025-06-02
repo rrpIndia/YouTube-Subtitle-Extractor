@@ -4,11 +4,7 @@ import os
 import tempfile as tf
 from unittest.mock import MagicMock, patch, mock_open
 
-<<<<<<< HEAD
-from main import FileManagment
-=======
 from main import get_id, get_files
->>>>>>> 7a4526e (nothimg)
 
 @unittest.skip("already tested")
 class TestGetId(unittest.TestCase):
@@ -42,27 +38,20 @@ class TestGetId(unittest.TestCase):
 @unittest.skip
 class TestGetFiles(unittest.TestCase):
     def setUp(self):
-        self.obj = FileManagment('test_channelx.txt')
-       
+        pass 
     def test_get_files_no_match(self):
         with patch('main.glob') as mocked_glob:
             mocked_glob.return_value = []
-            result = self.obj.get_files()
+            result = get_files('url_extract_*.json')
             self.assertEqual(result, [])
             mocked_glob.assert_called_with('url_extract_*.json')
 
     def test_get_matched(self):
         with patch('main.glob') as mocked_glob:
             mocked_glob.return_value = ['url_extract_1.json', 'url_extract_2.json']
-            result = self.obj.get_files()
+            result = get_files()
             self.assertEqual(result, ['url_extract_1.json', 'url_extract_2.json'])
             mocked_glob.assert_called_with('url_extract_*.json')
-
-
-
-class TestChannelList(unittest.TestCase):
-    def setUp(self):
-        self.obj = FileManagment('test_file.txt')
 
     def test_read_channels_line_by_line(self):
         with patch('builtins.open', mock_open(read_data='line1\nline2\nline3')):
@@ -83,61 +72,11 @@ class TestChannelList(unittest.TestCase):
             with self.assertRaises(EmptyLine):
                 self.obj.channel_list()
 
-
-if __name__ == '__main__':
-    unittest.main()
-<<<<<<< HEAD
-=======
-
-class TestGetFIles:
-')
-
-class TestGetFiles(unittest.TestCase):
-    def setUp(self):
-        self.obj = FileManagment('test_channelx.txt')
-       
     def test_get_files_no_match(self):
         with tf.NamedTemporaryFile(prefix='url_extract_', suffix='.json') as jf:
             self.assertEqual(os.path.basename(jf.name), self.obj.get_files())
-if __name__ == '__main__':
-    unittest.main()
-            mocked_glob.assert_called_with('url_extract_*.json')
-
-    def test_get_matched(self):
-        with patch('main.glob') as mocked_glob:
-            mocked_glob.return_value = ['url_extract_1.json', 'url_extract_2.json']
-            result = self.obj.get_files()
-            self.assertEqual(result, ['url_extract_1.json', 'url_extract_2.json'])
             mocked_glob.assert_called_with('url_extract_*.json')
 
 
-
-class TestChannelList(unittest.main):
-    def __init__
 if __name__ == '__main__':
     unittest.main()
-t')
-
-    def test_read_channels_line_by_line(self):
-        with patch('builtins.open', mock_open(read_data='line1\nline2\nline3')):
-            func_result = self.obj.channel_list()
-            expected_result = ['line1', 'line2', 'line3']
-            self.assertEqual(sorted(expected_result), sorted(func_result))
-
-    def test_read_channels_empty_line(self):
-        '''should exit when channel list is empty'''
-        with patch('builtins.open', mock_open(read_data='')):
-             with self.assertRaises(SystemExit):
-                self.obj.channel_list()
-
-    @unittest.skip # to implement this checking later
-    def test_read_channels_empty_line_bw_channel_list(self):
-        '''should warn with line number that url is wrong'''
-        with patch('builtins.open', mock_open(read_data='line1\nline2\n""')):
-            with self.assertRaises(EmptyLine):
-                self.obj.channel_list()
-
-
-if __name__ == '__main__':
-    unittest.main()
->>>>>>> 7a4526e (nothimg)
