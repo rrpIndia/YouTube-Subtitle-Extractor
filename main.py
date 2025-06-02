@@ -13,12 +13,7 @@ from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 CHANNEL_FILE = '/data/data/com.termux/files/home/storage/shared/projects/languages/python/codes/yt_rrp/channels.txt'
-
-class FileManagment:
-    def __init__(self, file):
-        '''takes file of channel list as input'''
-        self.file = file
-        self.channel_list = self.channel_list()
+ARCHIVE_FILE = "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt"
 
 def channel_list(channel_file) -> list:
     "" "takes a file of channel per line and generate a python list"""
@@ -62,8 +57,8 @@ def get_link_to_file(channel_url: str) -> Optional[List[str]]:
         '--lazy-playlist',
         "--dateafter", "now-3day",
         "--break-on-reject",
-        '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', f'url_extract_{self.channel_url.split('/')[-1]}_%(autonumber)d.json',
+        '--force-write-archive', "--download-archive", ARCHIVE_FILE,
+        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', f'url_extract_{channel_url.split('/')[-1]}_%(autonumber)d.json',
         channel_url
     ]
 
