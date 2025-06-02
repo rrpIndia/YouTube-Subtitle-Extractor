@@ -82,22 +82,18 @@ class FileManagment:
         files = glob(self.match)
         return files
 
-class Sender:
-    def __init__(self, message):
-        self.message = message
-        
-    def send_to_tg(self):
-        bot_token = os.getenv("BOT_TOKEN")
-        chat_id = os.getenv("CHAT_ID")
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        params = {
-            'chat_id': chat_id,
-            'text': self.message,
-            'parse_mode': 'HTML'
-        }
-        response = requests.get(url, params=params)
-        return response.json()   
-
+def send_to_tg(message):
+    bot_token = os.getenv("BOT_TOKEN")
+    chat_id = os.getenv("CHAT_ID")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    response = requests.get(url, params=params)
+    return response.json()   
+   
 class Video:
     def __init__(self, vid_url):
         self.vid_url = vid_url
