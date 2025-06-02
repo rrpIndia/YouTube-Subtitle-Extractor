@@ -33,15 +33,14 @@ class FileManagment:
             print(f'file not found {self.file}')
             return []
 
-    def read_json(self, json_file):
-        self.json_file = json_file
-        try:
-            with open(self.json_file, 'r') as f:
-                data_dict = json.load(f)
-                return data_dict
-        except FileNotFoundError:
-            print(f'file is not available')
-            return None
+def read_json(json_file):
+    try:
+        with open(json_file, 'r') as f:
+            data_dict = json.load(f)
+            return data_dict
+    except FileNotFoundError:
+        print(f'file is not available')
+        return None
 
 def make_json_files_of_urls(channel_list: list) -> None:
     for channel in channel_list:
