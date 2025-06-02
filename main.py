@@ -48,33 +48,31 @@ class FileManagment:
             self.get_links_to_file(channel)
 
 
-    def get_links_to_file(self, channel_url: str) -> Optional[List[str]]:
-        '''takes a url of channel as input and make json files of newly released video'''
-        self.channel_url = channel_url
-        print(f'starting download for {self.channel_url}')
+def get_links_to_file(channel_url: str) -> Optional[List[str]]:
+    '''takes a url of channel as input and make json files of newly released video'''
+    print(f'started making json file for {channel_url}')
 
 
-        #in second loop, program will put json data into already created files because %autoincrement does not know in  which iteration it is
-        # that is why channel name is must 
-        command = [
-            "yt-dlp",
-            '--simulate',
-            '--no-quiet',
-            '--lazy-playlist',
-            "--dateafter", "now-3day",
-            "--break-on-reject",
-            '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
-            "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', f'url_extract_{self.channel_url.split('/')[-1]}_%(autonumber)d.json',
-            self.channel_url
-        ]
+    #in second loop, program will put json data into already created files because %autoincrement does not know in  which iteration it is
+    # that is why channel name is must 
+    command = [
+        "yt-dlp",
+        '--simulate',
+        '--no-quiet',
+        '--lazy-playlist',
+        "--dateafter", "now-3day",
+        "--break-on-reject",
+        '--force-write-archive', "--download-archive", "/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/archive.txt",
+        "--print-to-file", '%(.{channel,title,upload_date,webpage_url})#j', f'url_extract_{self.channel_url.split('/')[-1]}_%(autonumber)d.json',
+        channel_url
+    ]
 
-        result = subprocess.run(command, capture_output=True, text=True)
-        if result.stdout:
-            result = result.stdout.strip().split('\n')
-            print(result)
-            return result
-        else:
-            return None
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.stdout:
+        result = result.stdout.strip().split('\n')
+        print(result)
+        return result
+    return None
 
 def get_files(match='url_extract_*.json')-> list:
     '''will return empty list if no files are available or matching'''
