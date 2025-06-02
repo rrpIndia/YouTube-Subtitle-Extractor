@@ -20,18 +20,19 @@ class FileManagment:
         self.file = file
         self.channel_list = self.channel_list()
 
-    def channel_list(self):
-        try:
-            with open(self.file, 'r') as f:
-                content = f.read()
-                if not content.strip():
-                    exit(f'file is empty: {self.file}')
+def channel_list(channel_file) -> list:
+    "" "takes a file of channel per line and generate a python list"""
+    try:
+        with open(channel_file, 'r') as f:
+            content = f.read()
+            if not content.strip():
+                exit(f'file is empty: {self.file}')
 
-                channels = [line.strip() for line in content.splitlines()]
-                return channels
-        except FileNotFoundError:
-            print(f'file not found {self.file}')
-            return []
+            channels = [line.strip() for line in content.splitlines()]
+            return channels
+    except FileNotFoundError:
+        print(f'file not found {self.file}')
+        return []
 
 def read_json(json_file):
     try:
