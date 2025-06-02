@@ -76,11 +76,10 @@ class FileManagment:
         else:
             return None
 
-    def get_files(self, match='url_extract_*.json'):
-        self.match = match
-        '''will return empty list if no files are available or matching'''
-        files = glob(self.match)
-        return files
+def get_files(match='url_extract_*.json')-> list:
+    '''will return empty list if no files are available or matching'''
+    files = glob(self.match)
+    return files
 
 def send_to_tg(message):
     bot_token = os.getenv("BOT_TOKEN")
@@ -94,26 +93,19 @@ def send_to_tg(message):
     response = requests.get(url, params=params)
     return response.json()   
    
-class Video:
-    def __init__(self, vid_url):
-        self.vid_url = vid_url
-        self.vid_id = self.get_id()
-        self.subtitle = self.get_subtitle()
+def get_id(vid_url: str)-> Optional[str]:
+    data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", vid_url)
+    if data:
+        return data[0]
+    return None
 
-    def get_id(self)-> Optional[str]:
-        data = re.findall(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", self.vid_url)
-        if data:
-            return data[0]
-        return None
-
-    def get_subtitle(self):
-        vid_id = self.get_id()
-        try:
-            transcript = YouTubeTranscriptApi.get_transcript(vid_id, languages=('hi', 'en'), preserve_formatting=True)
-            transcript_text = " ".join([entry['text'] for entry in transcript])
-            return transcript_text
-        except Exception as e:
-            print("Error:", e)
+def get_subtitle(vid_id) -> str:
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(vid_id, languages=('hi', 'en'), preserve_formatting=True)
+        transcript_text = " ".join([entry['text'] for entry in transcript])
+        return transcript_text
+    except Exception as e:
+        print("Error:", e)
 
 
 
@@ -146,16 +138,6 @@ def main():
             tg.send_to_tg()
             print(message)
         os.remove(dic)
-
-if __name__ == '__main__':
-<<<<<<< HEAD
-=======
-    pass
-5) ]
-        for message in messages:
-            print(message)
-        os.remove(dic)
-
 
 if __name__ == '__main__':
     main()
