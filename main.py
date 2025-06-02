@@ -12,7 +12,7 @@ from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
-CHANNEL_FILE = '/data/data/com.termux/files/home/storage/shared/study/languages/python/codes/yt_rrp/channels.txt'
+CHANNEL_FILE = '/data/data/com.termux/files/home/storage/shared/projects/languages/python/codes/yt_rrp/channels.txt'
 
 class FileManagment:
     def __init__(self, file):
@@ -26,12 +26,12 @@ def channel_list(channel_file) -> list:
         with open(channel_file, 'r') as f:
             content = f.read()
             if not content.strip():
-                exit(f'file is empty: {self.file}')
+                exit(f'file is empty: {channel_file}')
 
             channels = [line.strip() for line in content.splitlines()]
             return channels
     except FileNotFoundError:
-        print(f'file not found {self.file}')
+        print(f'file not found {channel_file}')
         return []
 
 def read_json(json_file):
