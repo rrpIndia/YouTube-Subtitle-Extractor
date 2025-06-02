@@ -43,12 +43,12 @@ class FileManagment:
             print(f'file is not available')
             return None
 
-    def make_json_files_of_urls(self):
-        for channel in self.channel_list:
-            self.get_links_to_file(channel)
+def make_json_files_of_urls(channel_list: list) -> None:
+    for channel in channel_list:
+        get_links_to_file(channel)
 
 
-def get_links_to_file(channel_url: str) -> Optional[List[str]]:
+def get_link_to_file(channel_url: str) -> Optional[List[str]]:
     '''takes a url of channel as input and make json files of newly released video'''
     print(f'started making json file for {channel_url}')
 
